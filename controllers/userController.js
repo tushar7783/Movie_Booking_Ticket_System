@@ -1,7 +1,14 @@
+require("dotenv/config")
 const{badRequestResponse,okResponse}=require("../helpers/customMessage");
 const UserModel = require("../models/userModel");
 const UserService=require("../services/userService")
 const Jwtauth=require("../services/jwtAuth")
+const twilio = require('twilio');
+
+// Twilio credentials from your account
+const accountSid = process.env.TWILOO_ACCOUNT_SID; // Replace with your Account SID
+const authToken = process.env.TWILLO_AUTH_TOKEN; 
+const client = new twilio(accountSid, authToken);
 let OTP;
 // let userOtp;add
 
@@ -65,12 +72,22 @@ exports.sentotp=async(req,res)=>{
         const user= await UserService.getUserbyPhoneno(Phoneno)
         if(!user) return badRequestResponse(req,res,"Register Yourself");
         
-        // send otp to phone number 
-
-        // send otp to phone number 
+    //    generate otp
         const geneatenumber=Math.floor(1000+Math.random()*9000)
         OTP=geneatenumber;
-       if(geneatenumber)return okResponse(req,res,`OTP send ${OTP}`)
+  
+
+        // send otp to phone number 
+client.messages.create({
+    body: `The Otp is ${geneatenumber}`,  // Message body
+    from: '+13528350489',           // Your Twilio phone number
+    to: `+91${req.body.Phoneno}`,              // Recipient's phone number
+  })
+  .then(message => console.log(`Message sent with SID: ${message.sid}`))
+  .catch(error => console.error('Error sending SMS:', error));
+
+
+       if(geneatenumber)return okResponse(req,res,`OTP send on the phone number ${Phoneno}`)
 
 
         
