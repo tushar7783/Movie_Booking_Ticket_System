@@ -19,6 +19,14 @@ module.exports=class UserService{
         else return exist
         
     }
+    static async getUserbyPhoneno(phoneno){
+        const exist=UserModel.findOne({Phoneno:phoneno})
+        if(!exist) return false;
+        else {
+            // console.log(exist.phoneno)
+            return exist
+        }
+    }
     static async matchPassword(user,password){
         const userpassword=user.password;
         const salt=process.env.SALT
