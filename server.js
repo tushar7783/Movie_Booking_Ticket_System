@@ -5,6 +5,7 @@ const PORT=process.env.PORT;
 const mongoose=require("mongoose")
 const routes=require("./routes/test")
 const userRoutes=require("./routes/userRoutes")
+const EventadmintartorRoutes=require("./routes/EvntadminstratorRoutes")
 // connection 
 mongoose
   .connect(process.env.MONGOOSE)
@@ -20,6 +21,7 @@ mongoose
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }));
 app.use("/user",userRoutes)
+app.use("/Eventadmintartor",EventadmintartorRoutes)
 
 app.listen(PORT,()=>{
     console.log(`the server running on the :${PORT}`)
