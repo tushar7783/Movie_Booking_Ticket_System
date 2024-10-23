@@ -5,6 +5,7 @@ const secrete = process.env.SECRETE_KEY;
 
 exports.GenrateToken=async(user)=>{
     const payload={
+    Name:user.Name,
     Email:user.Email,
     id: user._id,
     role: user.role,
