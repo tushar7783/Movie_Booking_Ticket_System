@@ -1,4 +1,6 @@
 require("dotenv/config")
+const crypto = require("crypto");
+const axios = require("axios");
 const{badRequestResponse,okResponse}=require("../helpers/customMessage");
 const UserModel = require("../models/userModel");
 const UserService=require("../services/userService")
@@ -7,6 +9,8 @@ const twilio = require('twilio');
 const MovieService=require("../services/movieService");
 const BookingService = require("../services/BookingService");
 const BookingModel=require("../models/bookingModel")
+const salt_key = process.env.SALT_KEY;
+merchant_id = process.env.MERCHANT_ID;
 
 
 // Twilio credentials from your account
@@ -40,7 +44,7 @@ exports.signup=async(req,res)=>{
         
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
     }
 }
 
@@ -55,7 +59,7 @@ exports.login=async(req,res)=>{
         if(token) return okResponse(req,res,`Token:${token}`)
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
     }
 }
 exports.logout=async(req,res)=>{
@@ -64,7 +68,7 @@ exports.logout=async(req,res)=>{
         
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
     }
 }
 
@@ -97,7 +101,7 @@ client.messages.create({
         
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
         
     }
 
@@ -119,7 +123,7 @@ exports.verifyOtp=async(req,res)=>{
         
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
     }
 }
 exports.bookMovie=async(req,res)=>{
@@ -127,10 +131,13 @@ exports.bookMovie=async(req,res)=>{
         const {Name,Email}=req.user
         // console.log(req.user)
         const GuestId=req.user.id;
-        const{Date,MovieId}=req.body;
+        const{Date,MovieId,SeatNumber}=req.body;
         const Movie= await MovieService.findMovie(MovieId)
+        const seatType= await MovieService.SeatType(SeatNumber)
+        // const movieId=movie.id;
+        
         // console.log(Movie.ShowTime[0].Date)
-        if(!Movie) {return badRequestResponse(req,res,"Somethimg went wrong ")}
+if(!Movie) {return badRequestResponse(req,res,"Somethimg went wrong ")}
         // const date=await MovieService.DateCh(Movie.ShowTime,Date)
         
         
@@ -140,13 +147,16 @@ exports.bookMovie=async(req,res)=>{
             GuestId,
             MovieId,
             Date,
+            SeatNumber
         })
-
+    //    if(movie.Showtime)
         const Booking=await BookingService.add(book)
         if(!Booking) return badRequestResponse(req,res,"Something Went Wrong");
-        else{
+        const seatReduce=await MovieService.reduceseat(seatType,MovieId)
+        // const seat 
+    
             return okResponse(req,res,"Booking added");
-        }
+    
 
         
        
@@ -155,8 +165,125 @@ exports.bookMovie=async(req,res)=>{
         
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
     }
+}
+exports.newpayment=async(req,res)=>{
+    try {
+        merchantTransactionId = await BookingService.generateTranscationid();
+        const data = {
+            merchantId: merchant_id,
+            merchantTransactionId: merchantTransactionId,
+            merchantUserId: req.body.MUID,
+            name: req.user.Name,
+            amount: req.body.amount * 100,
+            redirectUrl: `http://localhost:5000/api/status/${merchantTransactionId}`,
+            redirectMode: "POST",
+            mobileNumber: req.user.Phoneno,
+            paymentInstrument: {
+              type: "PAY_PAGE",
+            },
+          };
+          const payload = JSON.stringify(data);
+    // console.log(payload);
+    const payloadMain = Buffer.from(payload).toString("base64");
+    const keyIndex = 1;
+    const string = payloadMain + "/pg/v1/pay" + salt_key;
+    const sha256 = crypto.createHash("sha256").update(string).digest("hex");
+    const checksum = sha256 + "###" + keyIndex;
+    const Test_url = "https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/pay";
+    const options = {
+        method: "POST",
+        url: Test_url,
+        headers: {
+          accept: "application/json",
+          "Content-Type": "application/json",
+          "X-VERIFY": checksum,
+        },
+        data: {
+          request: payloadMain,
+        },
+      };
+//   console.log(axios);
+axios
+.request(options)
+.then(function (response) {
+//   res.send(response.data);
+
+return okResponse(req,res,response.data)
+  // return res.redirect(
+  //   response.data.data.instrumentResponse.redirectInfo.url
+  // );
+})
+.catch(function (error) {
+  console.error(error.response.data);
+  console.error(error.response.data.data);
+
+
+  return badRequestResponse(req,res,error.response.data)
+});
+
+        
+    } catch (error) {
+        console.log(error)
+        return badRequestResponse(req,res,error)
+    }
+}
+exports.checkStatus=async(req,res)=>{
+    try {
+        const {merchantTransactionId,bookingId} = req.body;
+  const merchantId = merchant_id;
+// const {}=req.body
+  const keyIndex = 1;
+  const string =
+    `/pg/v1/status/${merchantId}/${merchantTransactionId}` + salt_key;
+  const sha256 = crypto.createHash("sha256").update(string).digest("hex");
+  const checksum = sha256 + "###" + keyIndex;
+
+  const options = {
+    method: "GET",
+    url: `https://api-preprod.phonepe.com/apis/pg-sandbox/pg/v1/status/${merchantId}/${merchantTransactionId}`,
+    headers: {
+      accept: "application/json",
+      "Content-Type": "application/json",
+      "X-VERIFY": checksum,
+      "X-MERCHANT-ID": `${merchantId}`,
+    },
+  };
+  
+   // CHECK PAYMENT TATUS
+   const response = await axios.request(options);
+
+// response.data.success=true;
+// response=true;
+  if (response.data.success === true) {
+    // const url = `http://localhost:3000/success`;
+    const booking = await BookingService.findBookingandupdate(bookingId);
+    // const await =
+    if(!booking) return badRequestResponse(req,res,"Something went wrong");
+    return okResponse(req,res,"payment done");
+    
+    // return okResponse(req, res, response.data);
+  } else {
+    // const url = `http://localhost:3000/failure`;
+    return badRequestResponse(req, res, response.data);
+  }
+        
+    } catch (error) {
+        console.log(error)
+        return badRequestResponse(req,res,error)
+    }
+}
+
+exports.QRCode=async(req,res)=>{
+    try {
+        
+    } catch (error) {
+        console.log(error)
+        return badRequestResponse(req,res,error)
+    }
+
+
 }
 //*********************************************************************** */ Admin***************************************************88
 
@@ -180,7 +307,7 @@ exports.signupAdmin=async(req,res)=>{
         
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
     }
 }
 
@@ -196,6 +323,6 @@ exports.loginAmin=async(req,res)=>{
         
     } catch (error) {
         console.log(error)
-        return badRequestResponse(req,res,`something went wrong`)
+        return badRequestResponse(req,res,error)
     }
 }

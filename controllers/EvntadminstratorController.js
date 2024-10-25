@@ -3,7 +3,8 @@ const UserModel = require("../models/userModel");
 const UserService = require("../services/userService")
 const Jwtauth=require("../services/jwtAuth");
 const MovieModel = require("../models/movieModel");
-const MovieService=require("../services/movieService")
+const MovieService=require("../services/movieService");
+const SeatModel = require("../models/seatModel");
 
 exports.signup=async(req,res)=>{
     try {
@@ -54,7 +55,22 @@ exports.addMovies=async(req,res)=>{
         movie.EventAdminId=req.user.id;
         const newmovie=new MovieModel(movie)
         const add=await MovieService.addmovie(newmovie) 
-        if(!add) return badRequestResponse(req,res,"something went wrong")
+        
+         if(!add) 
+            {return badRequestResponse(req,res,"something went wrong")}
+        else{
+            const seat=await MovieService.SeatDivider(movie.ShowTime[0].availableSeat,add._id)
+            if(!seat) return badRequestResponse(req,res,"some error in seat selection")
+            const newSeat=new SeatModel(seat);
+            const addseat= await MovieService.addSeat(newSeat)
+            if(!addseat)  badRequestResponse(req,res,"something went wrong")
+
+        }
+         
+        
+
+        
+        
         
             return okResponse(req,res,"movie added");
         

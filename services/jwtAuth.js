@@ -9,7 +9,7 @@ exports.GenrateToken=async(user)=>{
     Email:user.Email,
     id: user._id,
     role: user.role,
-    phoneno:user.phoneno
+    Phoneno:user.Phoneno
     }
     const token=jwt.sign(payload,secrete,{expiresIn:"365d"})
     return token;

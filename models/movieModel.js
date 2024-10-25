@@ -3,7 +3,7 @@ const {Schema ,model}=require("mongoose")
 const MovieSchema=Schema({
     MovieName:{
       type:String,
-      unique:true
+      
     },
     director:{
       type:String,
