@@ -17,10 +17,10 @@ mongoose
   });
 
   // middleware
+  app.use(express.json())
+  app.use(express.urlencoded({ extended: false }));
   app.use("/test",routes)
-app.use(express.json())
-app.use(express.urlencoded({ extended: false }));
-app.use("/user",userRoutes)
+  app.use("/user",userRoutes)
 app.use("/Eventadmintartor",EventadmintartorRoutes)
 
 app.listen(PORT,()=>{

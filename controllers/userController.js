@@ -12,7 +12,6 @@ const BookingModel=require("../models/bookingModel")
 const salt_key = process.env.SALT_KEY;
 merchant_id = process.env.MERCHANT_ID;
 
-
 // Twilio credentials from your account
 const accountSid = process.env.TWILOO_ACCOUNT_SID; // Replace with your Account SID
 const authToken = process.env.TWILLO_AUTH_TOKEN; 
@@ -277,6 +276,21 @@ exports.checkStatus=async(req,res)=>{
 
 exports.QRCode=async(req,res)=>{
     try {
+        const userId=req.user.id;
+        // console.log(req.user);
+        const booking =await BookingService.findbooking(userId)
+        // console.log(typeof(booking))
+        if(!booking) return badRequestResponse(req,res,"Something went wrong");
+        const stringbooking=JSON.stringify(booking);
+        const qrcode=await BookingService.qrcode(stringbooking)
+        console.log(qrcode)
+        if(!qrcode){return badRequestResponse(req,res,"Something went wrong")}
+            
+       return okResponse(req,res,qrcode);
+
+      
+        
+
         
     } catch (error) {
         console.log(error)
@@ -284,6 +298,20 @@ exports.QRCode=async(req,res)=>{
     }
 
 
+}
+
+exports.verifyQR=async(req,res)=>{
+    try {
+        const bookingId=req.body.id;
+        const verify=await BookingService.verify(bookingId)
+        if(!verify) return badRequestResponse(req,res,"Not such booking")
+        const verifedstamp=await BookingService.usedTooking(bookingId)
+       if(verifedstamp.acknowledged==true){return okResponse(req,res,"verified booking! Enjoy your movie")}
+       else{return badRequestResponse(req,res,"something went wrong")}
+    } catch (error) {
+        console.log(error)
+        return badRequestResponse(req,res,error)
+    }
 }
 //*********************************************************************** */ Admin***************************************************88
 

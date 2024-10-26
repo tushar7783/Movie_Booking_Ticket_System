@@ -11,6 +11,7 @@ routes.post("/bookingMovie",Jwt,RoleCheckUser,userController.bookMovie)
 routes.post("/bookingMovie/payment",Jwt,RoleCheckUser,userController.newpayment)
 routes.post("/bookingMovie/payment/checkStatus",Jwt,RoleCheckUser,userController.checkStatus)
 routes.post("/qr-code",Jwt,RoleCheckUser,userController.QRCode)
+routes.post("/qr-code-verify",Jwt,RoleCheckUser,userController.verifyQR)
 
 // Router.post("/logout",userController.logout)
 routes.post("/Adminsignup",userController.signupAdmin)

@@ -26,6 +26,7 @@ const BookingSchema=Schema({
 
     },
     payment:{type:Number,default:0},
+    watched:{type:Number,default:0},
     created_at:{ type: Date, default: Date.now }
 
 })
