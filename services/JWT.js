@@ -1,5 +1,5 @@
 const { badRequestResponse,unauthorizedResponse } = require("../helpers/customMessage");
-const Jwtauth=require("../services/jwtAuth")
+const Jwtauth=require("./jwtAuth")
 
 
 class Token{

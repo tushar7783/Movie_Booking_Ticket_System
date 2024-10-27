@@ -104,4 +104,31 @@ console.log(istDate);
    return false
     }
 
+
+    static async SearchMovieByName(MovieName){
+     const search=await MovieModel.find({MovieName:MovieName})
+     
+     return search;
+    }
+    static async SearchMovieByDirector(director){
+     const search=await MovieModel.find({director:director})
+     return search;
+
+        
+    }
+    static async SearchMovieByGenre(genre){
+        const search=await MovieModel.find({genre:genre})
+        return search;
+
+        
+    }
+    static async searchMovie(value){
+     const search=await MovieModel.find({$or: [
+        { MovieName: { $regex: value } },
+        { director: { $regex: value} },
+        {genre:{$regex:value}}
+      ],})
+
+      return search
+    }
 }

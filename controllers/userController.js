@@ -313,6 +313,22 @@ exports.verifyQR=async(req,res)=>{
         return badRequestResponse(req,res,error)
     }
 }
+exports.Search=async(req,res)=>{
+    try {
+        const search =await MovieService.searchMovie(req.params.key);
+        if(search==[]) return badRequestResponse(req,res,"we cannot access the search")
+        // console.log(search)
+        
+            return okResponse(req,res,search)
+
+       
+        
+        
+    }catch (error) {
+        console.log(error)
+        return badRequestResponse(req,res,error)
+    }
+}
 //*********************************************************************** */ Admin***************************************************88
 
 exports.signupAdmin=async(req,res)=>{
@@ -348,6 +364,17 @@ exports.loginAmin=async(req,res)=>{
         if(!matchPassword) return badRequestResponse(req,res,`Invalid Password`)
         const token= await Jwtauth.GenrateToken(userExist) 
         if(token) return okResponse(req,res,`Token:${token}`)
+        
+    } catch (error) {
+        console.log(error)
+        return badRequestResponse(req,res,error)
+    }
+}
+exports.getAllUser=async(req,res)=>{
+    try {
+        const user=await UserService.getAllUser()
+        if(!user)return badRequestResponse(req,res,"Something Went Wrong")
+            return okResponse(req,res,user)
         
     } catch (error) {
         console.log(error)

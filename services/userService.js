@@ -2,6 +2,7 @@ require("dotenv/config")
 const{badRequestResponse,okResponse}=require("../helpers/customMessage");
 const {createHmac}=require("crypto");
 const UserModel = require("../models/userModel");
+const { getAllUser } = require("../controllers/userController");
 module.exports=class UserService{
     static async hashPassword(password){
         const salt=process.env.SALT;
@@ -34,6 +35,10 @@ module.exports=class UserService{
         if(hashPassword!=userpassword) return false;
         else return true
 
+    }
+    static async getAllUser(){
+        const user=await UserModel.find();
+        return user;
     }
 }
 
